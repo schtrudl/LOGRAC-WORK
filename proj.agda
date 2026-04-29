@@ -95,6 +95,15 @@ Disjunct → Literal
 CNF → Disjunct ∨ CNF
 -}
 
+-- literal defined in 2.
+data Disjunct : Set where
+    lit : Literal → Disjunct
+    _∨_ : Literal → Disjunct → Disjunct
+
+data CNF : Set where
+    dis : Disjunct → CNF -- XXX: errata on table
+    _∧_ : Disjunct → CNF → CNF -- XXX: errata on table
+
 {-
 Problem 8 (*). Define an evaluation function eval-cnf ∶ Assignment → CNF → Maybe Bool
 assigning to each assignment of variables and conjunction normal from formula its truth value.
