@@ -5,6 +5,7 @@
 module proj where
 
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 {-
 Problem 1 (*). Define a type of formulas called Formula, with the following grammar:
@@ -20,6 +21,12 @@ data Formula : Set where
   _∧_ : Formula → Formula → Formula
   _∨_ : Formula → Formula → Formula
 
+-- some helpers used in test cases
+_=>_ : Formula → Formula → Formula
+_=>_ p q = (¬ p) ∨ q
+_<=>_ : Formula → Formula → Formula
+_<=>_ p q = ((p => q) ∧ (q => p))
+
 {-
 Problem 2 (*). Define a type of negation normal form formulas called NNF, with the following
 grammar:
@@ -34,7 +41,6 @@ NNF → Literal
 data Literal : Set where
     Var  : ℕ → Literal
     ¬Var : ℕ → Literal
-
 
 data NNF : Set where
     lit : Literal → NNF
@@ -58,6 +64,16 @@ to-nnf (¬ (a ∧ b)) = (to-nnf (¬ a)) ∨ (to-nnf (¬ b))
 to-nnf (¬ (a ∨ b)) = (to-nnf (¬ a)) ∧ (to-nnf (¬ b))
 to-nnf (a ∧ b) = (to-nnf a) ∧ (to-nnf b)
 to-nnf (a ∨ b) = (to-nnf a) ∨ (to-nnf b)
+
+-- test case
+phi : Formula
+phi = (((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))
+
+expected-nnf : NNF
+expected-nnf = ((((lit (¬Var 1)) ∧ (lit (¬Var 2))) ∨ (lit (¬Var 3)))) ∨ (lit (¬Var 4))
+
+test-nnf : to-nnf phi ≡ expected-nnf
+test-nnf = refl
 
 {-
 Problem 4 (**). Copy the Assoc module from week 9 exercises and complete it to a fully
@@ -119,4 +135,7 @@ Problem 10 (**/***). Write a function that converts an NNFformula to an equisati
 CNFformula.
 Note: a more complex implementation (e. g. Tseytin transformation) will be graded higher.
 -}
+
+tseytin-transformation : NNF → CNF
+tseytin-transformation n = {!!}
 
