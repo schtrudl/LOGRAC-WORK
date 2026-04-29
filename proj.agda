@@ -4,8 +4,9 @@
 
 module proj where
 
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _⊔_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Data.Product using (_×_; _,_)
 
 {-
 Problem 1 (*). Define a type of formulas called Formula, with the following grammar:
@@ -41,6 +42,12 @@ NNF → Literal
 data Literal : Set where
     Var  : ℕ → Literal
     ¬Var : ℕ → Literal
+
+-- this will make writing easier
+-- agda does not want overloading here
+¬ₗ_ : Literal → Literal
+¬ₗ_ (Var x) = ¬Var x
+¬ₗ_ (¬Var x) = Var x
 
 data NNF : Set where
     lit : Literal → NNF
@@ -136,6 +143,40 @@ CNFformula.
 Note: a more complex implementation (e. g. Tseytin transformation) will be graded higher.
 -}
 
-tseytin-transformation : NNF → CNF
-tseytin-transformation n = {!!}
+-- poiščemo največjo var
+-- ker od tam naprej bomo dodajali svoje
+largest-var : NNF → ℕ
+largest-var (lit (Var x)) = x
+largest-var (lit (¬Var x)) = x
+largest-var (a ∧ b) = (largest-var a) ⊔ (largest-var b)
+largest-var (a ∨ b) = (largest-var a) ⊔ (largest-var b)
 
+-- tseytin-transformation-internal
+-- n is first var available
+-- returns (new first available var, builded CNF, this literal)
+tti : ℕ → NNF → ℕ × CNF × Literal
+tti n (lit x) = (n , dis (lit x) , x) -- ideally we would return empty CNF here
+tti n (a ∧ b) =
+    let
+        la∧b = Literal.Var n
+        n1 , aa , la = tti (suc n) a
+        n2 , bb , lb = tti n1 b
+    -- la∧b <=> la ∧ lb
+    -- /\ ¬la∧b ∨ la /\ ¬la∧b ∨ lb /\ la∧b ∨ ¬la ∨ ¬la
+    -- po zvesku drgač pa je tudi kle: https://en.wikipedia.org/wiki/Tseytin_transformation#Gate_sub-expressions
+    in (n2 , (( (¬ₗ la∧b) ∨ (lit la)) ∧ (((¬ₗ la∧b) ∨ (lit lb)) ∧ (dis ((¬ₗ la) ∨ ((¬ₗ lb) ∨ (lit la∧b)))))) , la∧b)
+tti n (a ∨ b) =
+    let
+        la∨b = Literal.Var n
+        n1 , aa , la = tti (suc n) a
+        n2 , bb , lb = tti n1 b
+    -- la∨b <=> la ∨ lb
+    -- /\ la∨b ∨ ¬la /\ la∨b ∨ ¬lb /\ ¬la∨b ∨ la ∨ lb
+    in ( n2 , ( la∨b ∨ (lit (¬ₗ la))) ∧ ( ( la∨b ∨ (lit (¬ₗ lb))) ∧ ( dis ((¬ₗ la∨b) ∨ (la ∨ (lit (lb))) ))  ), la∨b )
+
+tseytin-transformation : NNF → CNF
+tseytin-transformation f =
+    let _ , f , l = tti (suc(largest-var f)) f
+    in (lit l) ∧ f -- we need to append root literal
+
+-- TODO: test this
