@@ -4,6 +4,7 @@
 
 module proj where
 
+open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _⊔_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Data.Product using (_×_; _,_)
@@ -97,6 +98,55 @@ open import Data.List.Relation.Unary.Any using (Any; any?)
 open import Data.List.Relation.Unary.All using (All; all?)
 open import Relation.Nullary using (yes; no; ¬_; ¬?)
 -}
+
+open import Relation.Binary using (Decidable; DecidableEquality)
+open import Data.List using (List; []; _∷_; _++_; length)
+open import Data.Maybe using (Maybe; nothing; just)
+open import Relation.Nullary using (Dec; yes; no; ¬_)
+open import Data.List.Relation.Unary.Any using (Any; any?; here; there)
+open import Data.Bool using (Bool; true; false)
+
+record DecType : Set₁ where
+    field
+        carr   : Set
+        test-≡ : (x y : carr) → Dec (x ≡ y)
+
+open DecType
+
+module AssocList (K : DecType) (V : Set) where
+
+    Assoc : Set
+    Assoc = List (carr K × V)
+
+    _∈_ : carr K → Assoc → Set
+    k ∈ kvs = Any (λ (key , _) → k ≡ key) kvs
+
+    lookup : {k : carr K} {kvs : Assoc} → k ∈ kvs → V
+    lookup {k} {((key , v) ∷ kvs)} (here p) = v
+    lookup {k} {((key , v) ∷ kvs)} (there p) = lookup {k} {kvs} p
+
+    _∈?_ : (k : carr K) → (kvs : Assoc) → Dec (k ∈ kvs)
+    k ∈? kvs = any? (λ (key , _) → test-≡ K k key) kvs
+
+    _‼_ : (kvs : Assoc) → (k : carr K) → Maybe V
+    [] ‼ k = nothing
+    ((key , v) ∷ kvs) ‼ k with test-≡ K k key
+    ... | yes _ = just v
+    ... | no  _ = kvs ‼ k
+
+    _[_]≔_ : Assoc → carr K → V → Assoc
+    [] [ k ]≔ v = (k , v) ∷ []
+    ((key , val) ∷ kvs) [ k ]≔ v with test-≡ K k key
+    ... | yes _ = (k , v) ∷ kvs
+    ... | no  _ = (key , val) ∷ (kvs [ k ]≔ v)
+
+NatDec : DecType
+NatDec = record{carr   = ℕ; test-≡ = Data.Nat._≟_}
+
+open AssocList NatDec Bool
+
+Assignment : Set
+Assignment = Assoc
 
 {-
 Problem 5 (*). Define an evaluation function eval ∶ Assignment → Formula → Maybe Bool
