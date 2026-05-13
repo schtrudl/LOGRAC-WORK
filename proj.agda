@@ -98,7 +98,7 @@ open import Relation.Nullary using (yes; no; ¬_; ¬?)
 -}
 
 open import Relation.Binary using (Decidable; DecidableEquality)
-open import Data.List using (List; []; _∷_; _++_; length)
+open import Data.List using (List; []; _∷_; _++_; length; map)
 open import Data.Maybe using (Maybe; nothing; just)
 open import Relation.Nullary using (Dec; yes; no; ¬_)
 open import Data.List.Relation.Unary.Any using (Any; any?; here; there)
@@ -236,6 +236,39 @@ eval-cnf σ (d ∧ rest) with eval-disj σ d | eval-cnf σ rest
 Problem 9 (**/***). Write an SAT solver for CNFformulas.
 Note: a more complex implementation (e. g. DPLL) will be graded higher
 -}
+
+{- Truth table solver: -}
+vars : CNF → Assoc
+
+vars-lit : Literal → Assoc → Assoc
+vars-lit (Var x) acc = acc [ x ]≔ true
+vars-lit (¬Var x) acc = acc [ x ]≔ true
+
+vars-disj : Disjunct → Assoc → Assoc
+vars-disj (lit l) acc = vars-lit l acc
+vars-disj (l ∨ rest) acc = vars-disj rest (vars-lit l acc)
+
+vars (dis d) = vars-disj d []
+vars (d ∧ rest) = vars-disj d (vars rest)
+
+permutations : Assoc -> List Assignment
+
+permutations [] = [] ∷ []
+permutations ((k , _) ∷ rest) =
+    let
+        perms = permutations rest
+        with-true = map (λ ass -> ass [ k ]≔ true) perms
+        with-false = map (λ ass -> ass [ k ]≔ false) perms
+    in with-true ++ with-false
+
+sat-assignments : CNF → List Assignment → Bool
+sat-assignments f [] = false
+sat-assignments f (σ ∷ rest) with eval-cnf σ f
+... | just true = true
+... | _ = sat-assignments f rest
+
+SAT : CNF → Maybe Bool
+SAT f = just (sat-assignments f (permutations (vars f)))
 
 {-
 Problem 10 (**/***). Write a function that converts an NNFformula to an equisatisfiable

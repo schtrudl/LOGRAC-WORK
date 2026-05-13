@@ -1,6 +1,6 @@
 module tests where
 
-open import proj using (Assignment; eval; eval-nnf; eval-cnf)
+open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT)
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)
 open import Data.Bool using (Bool; true; false)
@@ -158,3 +158,36 @@ test-nnf-correctness :
   eval σ (proj._∨_ (proj.Var 0) (proj.Var 1))
   ≡ eval-nnf σ (proj.to-nnf (proj._∨_ (proj.Var 0) (proj.Var 1)))
 test-nnf-correctness = refl
+
+-- SAT
+
+sat-simple :
+  SAT (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.Var 0)))
+  ≡ just true
+sat-simple = refl
+
+sat-contradiction :
+  SAT
+    (proj.CNF._∧_
+      (proj.Disjunct.lit (proj.Literal.Var 0))
+      (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 0))))
+  ≡ just false
+sat-contradiction = refl
+
+sat-two-vars :
+  SAT
+    (proj.CNF._∧_
+      (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+      (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1))))
+  ≡ just true
+sat-two-vars = refl
+
+sat-unsat-two-vars :
+  SAT
+    (proj.CNF._∧_
+      (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+      (proj.CNF._∧_
+        (proj.Disjunct.lit (proj.Literal.¬Var 0))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))))
+  ≡ just false
+sat-unsat-two-vars = refl
