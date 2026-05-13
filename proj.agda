@@ -1,5 +1,3 @@
-{-# OPTIONS --prop #-}
-
 {- Instructions are subject to change -}
 
 module proj where
@@ -104,7 +102,7 @@ open import Data.List using (List; []; _∷_; _++_; length)
 open import Data.Maybe using (Maybe; nothing; just)
 open import Relation.Nullary using (Dec; yes; no; ¬_)
 open import Data.List.Relation.Unary.Any using (Any; any?; here; there)
-open import Data.Bool using (Bool; true; false)
+open import Data.Bool using (Bool; true; false; not)
 
 record DecType : Set₁ where
     field
@@ -153,10 +151,44 @@ Problem 5 (*). Define an evaluation function eval ∶ Assignment → Formula →
 assigning to each assignment of variables and formula its truth value.
 -}
 
+eval : Assignment → Formula → Maybe Bool
+
+eval σ (Var x) = σ ‼ x
+
+eval σ (¬ x) with eval σ x
+... | nothing = nothing
+... | just x  = just (not x)
+
+eval σ (x ∧ y) with eval σ x | eval σ y
+... | just x | just y = just (x Data.Bool.∧ y)
+... | _      | _      = nothing
+
+eval σ (x ∨ y) with eval σ x | eval σ y
+... | just x | just y = just (x Data.Bool.∨ y)
+... | _      | _      = nothing
+
 {-
 Problem 6 (*). Define an evaluation function eval-nnf ∶ Assignment → NNF → Maybe Bool
 assigning to each assignment of variables and negation normal from formula its truth value.
 -}
+
+eval-nnf : Assignment → NNF → Maybe Bool
+
+eval-nnf σ (lit (Var x)) with σ ‼ x
+... | nothing = nothing
+... | just x  = just x
+
+eval-nnf σ (lit (¬Var x)) with σ ‼ x
+... | nothing = nothing
+... | just x  = just (not x)
+
+eval-nnf σ (x ∧ y) with eval-nnf σ y | eval-nnf σ y
+... | just x | just y = just (x Data.Bool.∧ y)
+... | _      | _      = nothing
+
+eval-nnf σ (x ∨ y) with eval-nnf σ x | eval-nnf σ y
+... | just x | just y = just (x Data.Bool.∨ y)
+... | _      | _      = nothing
 
 {-
 Problem 7 (*). Define a type of conjunction normal form formulas called CNF, with the following
@@ -181,6 +213,29 @@ data CNF : Set where
 Problem 8 (*). Define an evaluation function eval-cnf ∶ Assignment → CNF → Maybe Bool
 assigning to each assignment of variables and conjunction normal from formula its truth value.
 -}
+
+{- Helpers for case coverage, implement these into the earlier two cases (literal): -}
+eval-lit : Assignment → Literal → Maybe Bool
+
+eval-lit σ (Var x) with σ ‼ x
+... | nothing = nothing
+... | just b  = just b
+
+eval-lit σ (¬Var x) with σ ‼ x
+... | nothing = nothing
+... | just b  = just (not b)
+
+eval-disj : Assignment → Disjunct → Maybe Bool
+eval-disj σ (lit l) = eval-lit σ l
+eval-disj σ (x ∨ xs) with eval-lit σ x | eval-disj σ xs
+... | just a | just b = just (a Data.Bool.∨ b)
+... | _      | _      = nothing
+
+eval-cnf : Assignment → CNF → Maybe Bool
+eval-cnf σ (dis d) = eval-disj σ d
+eval-cnf σ (d ∧ rest) with eval-disj σ d | eval-cnf σ rest
+... | just a | just b = just (a Data.Bool.∧ b)
+... | _      | _      = nothing
 
 {-
 Problem 9 (**/***). Write an SAT solver for CNFformulas.
