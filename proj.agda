@@ -150,10 +150,20 @@ Assignment = Assoc
 Problem 5 (*). Define an evaluation function eval ∶ Assignment → Formula → Maybe Bool
 assigning to each assignment of variables and formula its truth value.
 -}
+eval-lit : Assignment → Literal → Maybe Bool
+
+eval-lit σ (Var x) with σ ‼ x
+... | nothing = nothing
+... | just b  = just b
+
+eval-lit σ (¬Var x) with σ ‼ x
+... | nothing = nothing
+... | just b  = just (not b)
 
 eval : Assignment → Formula → Maybe Bool
 
-eval σ (Var x) = σ ‼ x
+eval σ (Var x) = eval-lit σ (Literal.Var x)
+eval σ (¬ Var x) = eval-lit σ (Literal.¬Var x)
 
 eval σ (¬ x) with eval σ x
 ... | nothing = nothing
@@ -174,15 +184,9 @@ assigning to each assignment of variables and negation normal from formula its t
 
 eval-nnf : Assignment → NNF → Maybe Bool
 
-eval-nnf σ (lit (Var x)) with σ ‼ x
-... | nothing = nothing
-... | just x  = just x
+eval-nnf σ (lit l) = eval-lit σ l
 
-eval-nnf σ (lit (¬Var x)) with σ ‼ x
-... | nothing = nothing
-... | just x  = just (not x)
-
-eval-nnf σ (x ∧ y) with eval-nnf σ y | eval-nnf σ y
+eval-nnf σ (x ∧ y) with eval-nnf σ x | eval-nnf σ y
 ... | just x | just y = just (x Data.Bool.∧ y)
 ... | _      | _      = nothing
 
@@ -215,15 +219,6 @@ assigning to each assignment of variables and conjunction normal from formula it
 -}
 
 {- Helpers for case coverage, implement these into the earlier two cases (literal): -}
-eval-lit : Assignment → Literal → Maybe Bool
-
-eval-lit σ (Var x) with σ ‼ x
-... | nothing = nothing
-... | just b  = just b
-
-eval-lit σ (¬Var x) with σ ‼ x
-... | nothing = nothing
-... | just b  = just (not b)
 
 eval-disj : Assignment → Disjunct → Maybe Bool
 eval-disj σ (lit l) = eval-lit σ l
