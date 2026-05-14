@@ -295,18 +295,51 @@ lit-eq (Var _) (¬Var _) = false
 lit-eq (¬Var _) (Var _) = false
 lit-eq (¬Var x) (¬Var y) = x == y
 
+open import Data.Bool.Base renaming (_∨_ to _||_; _∧_ to _&&_)
 is-pure-dis : Disjunct → Literal → Bool
-is-pure-dis (lit x) y = lit-eq x y
-is-pure-dis (x ∨ d) = {!   !}
+is-pure-dis (lit x) l = lit-eq x l
+is-pure-dis (x ∨ d) l with (lit-eq x l)
+... | true = is-pure-dis d l
+... | false = false
 
-is-pure : CNF → Bool
-is-pure c = {!!}
+is-pure : CNF → Literal → Bool
+is-pure (dis x) l = is-pure-dis x l
+is-pure (x ∧ c) l with (is-pure-dis x l)
+... | true = is-pure c l
+... | false = false
+
+-- TODO(perf): use nodup for
+find-all-literals-dis : Disjunct → List Literal
+find-all-literals-dis (lit l) = l ∷ []
+find-all-literals-dis (l ∨ d) = l ∷ (find-all-literals-dis d)
+
+find-all-literals : CNF → List Literal
+find-all-literals (dis d) = find-all-literals-dis d
+find-all-literals (d ∧ c) = (find-all-literals-dis d) ++ (find-all-literals c)
+
+find-pure-in-all-literals : CNF → List Literal → Maybe Literal
+find-pure-in-all-literals _ [] = nothing
+find-pure-in-all-literals c (l ∷ lst) with (is-pure c l)
+... | true = just l
+... | false = find-pure-in-all-literals c lst
 
 find-pure : CNF → Maybe Literal
-find-pure = {!!}
+find-pure c = find-pure-in-all-literals c (find-all-literals c)
 
+simplfy-dis : Disjunct → Literal → Maybe Disjunct
+simplfy-dis (lit x) l = {!  !}
+simplfy-dis (x ∨ d) l = {!   !}
+
+simplfy : CNF → Literal → Maybe CNF
+simplfy c l = {!!}
+ {-
 DPLL : CNF → Maybe Bool
-DPLL = {!!}
+DPLL c with (find-unit c)
+... | just l with (simplfy c l)
+... | just l | just c = DPLL c
+... | just l | nothing = nothing --
+... | nothing = {!!}
+-}
 
 {-
 Problem 10 (**/***). Write a function that converts an NNFformula to an equisatisfiable
