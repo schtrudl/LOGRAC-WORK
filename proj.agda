@@ -270,6 +270,44 @@ sat-assignments f (σ ∷ rest) with eval-cnf σ f
 SAT : CNF → Maybe Bool
 SAT f = just (sat-assignments f (permutations (vars f)))
 
+-- DPLL
+
+is-unit : Disjunct → Maybe Literal
+is-unit (lit l) = just l
+is-unit (_ ∨ _) = nothing
+
+find-unit : CNF → Maybe Literal
+find-unit (dis d) = is-unit d
+find-unit (d ∧ c) with is-unit d
+... | just l = just l
+... | nothing = find-unit c
+
+-- is this not in std?
+_==_ : ℕ → ℕ → Bool
+zero  == zero  = true
+zero  == suc n = false
+suc m == zero  = false
+suc m == suc n = m == n
+
+lit-eq : Literal → Literal → Bool
+lit-eq (Var x) (Var y) = x == y
+lit-eq (Var _) (¬Var _) = false
+lit-eq (¬Var _) (Var _) = false
+lit-eq (¬Var x) (¬Var y) = x == y
+
+is-pure-dis : Disjunct → Literal → Bool
+is-pure-dis (lit x) y = lit-eq x y
+is-pure-dis (x ∨ d) = {!   !}
+
+is-pure : CNF → Bool
+is-pure c = {!!}
+
+find-pure : CNF → Maybe Literal
+find-pure = {!!}
+
+DPLL : CNF → Maybe Bool
+DPLL = {!!}
+
 {-
 Problem 10 (**/***). Write a function that converts an NNFformula to an equisatisfiable
 CNFformula.
