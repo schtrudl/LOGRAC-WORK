@@ -261,14 +261,14 @@ permutations ((k , _) ∷ rest) =
         with-false = map (λ ass -> ass [ k ]≔ false) perms
     in with-true ++ with-false
 
-sat-assignments : CNF → List Assignment → Bool
-sat-assignments f [] = false
+sat-assignments : CNF → List Assignment → Maybe Assignment
+sat-assignments f [] = nothing
 sat-assignments f (σ ∷ rest) with eval-cnf σ f
-... | just true = true
+... | just true = just σ
 ... | _ = sat-assignments f rest
 
-SAT : CNF → Maybe Bool
-SAT f = just (sat-assignments f (permutations (vars f)))
+SAT : CNF → Maybe Assignment
+SAT f = (sat-assignments f (permutations (vars f)))
 
 -- DPLL
 
