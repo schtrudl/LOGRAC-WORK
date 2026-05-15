@@ -282,18 +282,13 @@ find-unit (d ∧ c) with is-unit d
 ... | just l = just l
 ... | nothing = find-unit c
 
--- is this not in std?
-_==_ : ℕ → ℕ → Bool
-zero  == zero  = true
-zero  == suc n = false
-suc m == zero  = false
-suc m == suc n = m == n
+open import Data.Nat.Base using (_≡ᵇ_)
 
 lit-eq : Literal → Literal → Bool
-lit-eq (Var x) (Var y) = x == y
+lit-eq (Var x) (Var y) = x ≡ᵇ y
 lit-eq (Var _) (¬Var _) = false
 lit-eq (¬Var _) (Var _) = false
-lit-eq (¬Var x) (¬Var y) = x == y
+lit-eq (¬Var x) (¬Var y) = x ≡ᵇ y
 
 open import Data.Bool.Base renaming (_∨_ to _||_; _∧_ to _&&_)
 is-pure-dis : Disjunct → Literal → Bool
@@ -334,16 +329,16 @@ data Clause (A : Set) : Set where
 -- if it contains literal we can erase whole clause
 -- otherwise we might just reduced the clause
 simply-lit : Literal → Literal → Clause Literal
-simply-lit ((Var x)) (Var y) with x == y
+simply-lit ((Var x)) (Var y) with x ≡ᵇ y
 ... | true = sat
 ... | false = some (Var x)
-simply-lit ((Var x)) (¬Var y) with x == y
+simply-lit ((Var x)) (¬Var y) with x ≡ᵇ y
 ... | true = unsat
 ... | false = some (Var x)
-simply-lit ((¬Var x)) (Var y) with x == y
+simply-lit ((¬Var x)) (Var y) with x ≡ᵇ y
 ... | true = unsat
 ... | false = some (Var x)
-simply-lit ((¬Var x)) (¬Var y) with x == y
+simply-lit ((¬Var x)) (¬Var y) with x ≡ᵇ y
 ... | true = sat
 ... | false = some (Var x)
 
