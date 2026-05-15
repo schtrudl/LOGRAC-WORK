@@ -333,10 +333,10 @@ simply-lit (Var x) (¬Var y) with x ≡ᵇ y
 ... | false = some (Var x)
 simply-lit (¬Var x) (Var y) with x ≡ᵇ y
 ... | true = unsat
-... | false = some (Var x)
+... | false = some (¬Var x)
 simply-lit (¬Var x) (¬Var y) with x ≡ᵇ y
 ... | true = sat
-... | false = some (Var x)
+... | false = some (¬Var x)
 
 simplfy-dis : Disjunct → Literal → Clause Disjunct
 simplfy-dis (lit x) l with (simply-lit x l)

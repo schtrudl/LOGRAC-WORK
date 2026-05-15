@@ -268,6 +268,24 @@ dpll-two-vars :
   ≡ true
 dpll-two-vars = refl
 
+find-unit-? : find-unit (proj.CNF._∧_
+      (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+      (proj.CNF._∧_
+        (proj.Disjunct.lit (proj.Literal.¬Var 0))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1))))) ≡ just (¬Var 0)
+find-unit-? = refl
+
+simplfy-x0 : simplfy (proj.CNF._∧_
+      (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+      (proj.CNF._∧_
+        (proj.Disjunct.lit (proj.Literal.¬Var 0))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1))))) (¬Var 0) ≡ some (lit (Var 1) ∧ proj.dis (lit (¬Var 1)))
+simplfy-x0 = refl
+
+simplfy-x1' : simplfy (lit (Var 1) ∧ proj.dis (lit (¬Var 1))) (Var 1) ≡ unsat
+simplfy-x1' = refl
+
+-- (x0 \/ x1) /\ (!x0) /\ (!x1)
 dpll-unsat-two-vars :
   DPLL
     (proj.CNF._∧_
