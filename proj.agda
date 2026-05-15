@@ -228,13 +228,13 @@ Note: a more complex implementation (e. g. DPLL) will be graded higher
 -}
 
 {- Truth table solver: -}
-vars : CNF → Assoc
+vars : CNF → Assignment
 
-vars-lit : Literal → Assoc → Assoc
+vars-lit : Literal → Assignment → Assignment
 vars-lit (Var x) acc = acc [ x ]≔ true
-vars-lit (¬Var x) acc = acc [ x ]≔ true
+vars-lit (¬Var x) acc = acc [ x ]≔ false
 
-vars-disj : Disjunct → Assoc → Assoc
+vars-disj : Disjunct → Assignment → Assignment
 vars-disj (lit l) acc = vars-lit l acc
 vars-disj (l ∨ rest) acc = vars-disj rest (vars-lit l acc)
 
