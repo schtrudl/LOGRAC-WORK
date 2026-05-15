@@ -262,6 +262,12 @@ SAT f = (sat-assignments f (permutations (vars f)))
 
 -- DPLL
 
+{-
+HALT:
+- število literalov če je literal notr, potem bo simplfy zmanšal število literalov
+
+-}
+
 is-unit : Disjunct → Maybe Literal
 is-unit (lit l) = just l
 is-unit (_ ∨ _) = nothing
@@ -366,27 +372,38 @@ pick-a-lit (lit l ∧ c) = l
 pick-a-lit ((l ∨ _) ∧ _) = l
 
 -- TODO: Maybe Assignment
-{-
-DPLL : CNF → Bool
-DPLL c with find-unit c
-DPLL c | just l with simplfy c l
-... | some c' = DPLL c'
+
+DPLL-internal : CNF → ℕ → Bool
+DPLL-internal _ zero = false
+DPLL-internal c (suc fuel) with find-unit c
+DPLL-internal c (suc fuel) | just l with simplfy c l
+... | some c' = DPLL-internal c' fuel
 ... | sat     = true
 ... | unsat   = false
-DPLL c | nothing with find-pure c
+DPLL-internal c (suc fuel) | nothing with find-pure c
 ... | just l with simplfy c l
-...   | some c' = DPLL c'
+...   | some c' = DPLL-internal c' fuel
 ...   | sat     = true
 ...   | unsat   = false
-DPLL c | nothing | nothing with (pick-a-lit c)
+DPLL-internal c (suc fuel) | nothing | nothing with (pick-a-lit c)
 ... | l with (simplfy c l)
-...   | some c' = DPLL c'
+...   | some c' = DPLL-internal c' fuel
 ...   | sat     = true
 ...   | unsat with (simplfy c (¬ₗ l))
-...     | some c' = DPLL c'
+...     | some c' = DPLL-internal c' fuel
 ...     | sat     = true
 ...     | unsat   = false
--}
+
+count-literals-dis : Disjunct → ℕ
+count-literals-dis (lit _) = 1
+count-literals-dis (_ ∨ d) = 1 + (count-literals-dis d)
+
+count-literals : CNF → ℕ
+count-literals (dis d) = count-literals-dis d
+count-literals (d ∧ c) = (count-literals-dis d) + (count-literals c)
+
+DPLL : CNF → Bool
+DPLL c = DPLL-internal c (suc (count-literals c))
 
 {-
 Problem 10 (**/***). Write a function that converts an NNFformula to an equisatisfiable
