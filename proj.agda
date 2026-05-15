@@ -326,21 +326,77 @@ find-pure-in-all-literals c (l ∷ lst) with (is-pure c l)
 find-pure : CNF → Maybe Literal
 find-pure c = find-pure-in-all-literals c (find-all-literals c)
 
+data Clause (A : Set) : Set where
+  sat : Clause A -- all was reduced
+  unsat : Clause A -- unsatidfyable
+  some : A → Clause A
+
 -- if it contains literal we can erase whole clause
-contains-lit : Disjunct → Literal → Bool
-contains-lit (lit x) l = {!  !}
-contains-lit (x ∨ d) l = {!   !}
+-- otherwise we might just reduced the clause
+simply-lit : Literal → Literal → Clause Literal
+simply-lit ((Var x)) (Var y) with x == y
+... | true = sat
+... | false = some (Var x)
+simply-lit ((Var x)) (¬Var y) with x == y
+... | true = unsat
+... | false = some (Var x)
+simply-lit ((¬Var x)) (Var y) with x == y
+... | true = unsat
+... | false = some (Var x)
+simply-lit ((¬Var x)) (¬Var y) with x == y
+... | true = sat
+... | false = some (Var x)
+
+simplfy-dis : Disjunct → Literal → Clause Disjunct
+simplfy-dis (lit x) l with (simply-lit x l)
+... | sat = sat
+... | unsat = unsat
+... | some x = some (lit x)
+simplfy-dis (x ∨ d) l with (simply-lit x l)
+... | sat = sat
+... | unsat = unsat
+... | some x with (simplfy-dis d l)
+...   | sat = sat
+...   | unsat = unsat
+...   | some d = some (x ∨ d)
 
 -- retruns nothing if empty => all done
-simplfy : CNF → Literal → Maybe CNF
-simplfy c l = {!!}
- {-
-DPLL : CNF → Maybe Bool
-DPLL c with (find-unit c)
-... | just l with (simplfy c l)
-... | just l | just c = DPLL c
-... | just l | nothing = nothing --
-... | nothing = {!!}
+simplfy : CNF → Literal → Clause CNF
+simplfy (dis d) l with (simplfy-dis d l)
+... | sat = sat
+... | unsat = unsat
+... | some d = some (dis d)
+simplfy (d ∧ c) l with (simplfy-dis d l)
+... | sat = sat
+... | unsat = unsat
+... | some d with (simplfy c l)
+...   | sat = sat
+...   | unsat = unsat
+...   | some c = some (d ∧ c)
+
+pick-a-lit : CNF → Literal
+pick-a-lit (dis (lit l)) = l
+pick-a-lit (dis (l ∨ _)) = l
+pick-a-lit (lit l ∧ c) = l
+pick-a-lit ((l ∨ _) ∧ _) = l
+
+-- TODO: Maybe Assignment
+{-
+DPLL : CNF → Bool
+DPLL c with find-unit c
+DPLL c | just l with simplfy c l
+... | some c' = DPLL c'
+... | sat     = true
+... | unsat   = false
+DPLL c | nothing with find-pure c
+... | just l with simplfy c l
+...   | some c' = DPLL c'
+...   | sat     = true
+...   | unsat   = false
+DPLL c | nothing | nothing with simplfy c (pick-a-lit c)
+... | some c' = DPLL c'
+... | sat     = true
+... | unsat   = false
 -}
 
 {-
