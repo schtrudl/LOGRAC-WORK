@@ -326,10 +326,12 @@ find-pure-in-all-literals c (l ∷ lst) with (is-pure c l)
 find-pure : CNF → Maybe Literal
 find-pure c = find-pure-in-all-literals c (find-all-literals c)
 
-simplfy-dis : Disjunct → Literal → Maybe Disjunct
-simplfy-dis (lit x) l = {!  !}
-simplfy-dis (x ∨ d) l = {!   !}
+-- if it contains literal we can erase whole clause
+contains-lit : Disjunct → Literal → Bool
+contains-lit (lit x) l = {!  !}
+contains-lit (x ∨ d) l = {!   !}
 
+-- retruns nothing if empty => all done
 simplfy : CNF → Literal → Maybe CNF
 simplfy c l = {!!}
  {-
