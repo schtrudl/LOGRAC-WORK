@@ -325,16 +325,16 @@ data Clause (A : Set) : Set where
 -- if it contains literal we can erase whole clause
 -- otherwise we might just reduced the clause
 simply-lit : Literal → Literal → Clause Literal
-simply-lit ((Var x)) (Var y) with x ≡ᵇ y
+simply-lit (Var x) (Var y) with x ≡ᵇ y
 ... | true = sat
 ... | false = some (Var x)
-simply-lit ((Var x)) (¬Var y) with x ≡ᵇ y
+simply-lit (Var x) (¬Var y) with x ≡ᵇ y
 ... | true = unsat
 ... | false = some (Var x)
-simply-lit ((¬Var x)) (Var y) with x ≡ᵇ y
+simply-lit (¬Var x) (Var y) with x ≡ᵇ y
 ... | true = unsat
 ... | false = some (Var x)
-simply-lit ((¬Var x)) (¬Var y) with x ≡ᵇ y
+simply-lit (¬Var x) (¬Var y) with x ≡ᵇ y
 ... | true = sat
 ... | false = some (Var x)
 
@@ -358,12 +358,15 @@ simplfy (dis d) l with (simplfy-dis d l)
 ... | unsat = unsat
 ... | some d = some (dis d)
 simplfy (d ∧ c) l with (simplfy-dis d l)
+simplfy (d ∧ c) l | unsat = unsat
+simplfy (d ∧ c) l | sat with (simplfy c l)
 ... | sat = sat
 ... | unsat = unsat
-... | some d with (simplfy c l)
-...   | sat = sat
-...   | unsat = unsat
-...   | some c = some (d ∧ c)
+... | some c' = some c'
+simplfy (d ∧ c) l | some d' with (simplfy c l)
+... | sat = sat
+... | unsat = unsat
+... | some c' = some (d' ∧ c')
 
 pick-a-lit : CNF → Literal
 pick-a-lit (dis (lit l)) = l
@@ -376,11 +379,11 @@ pick-a-lit ((l ∨ _) ∧ _) = l
 DPLL-internal : CNF → ℕ → Assignment → Maybe Assignment
 DPLL-internal _ zero _ = nothing
 DPLL-internal c (suc fuel) a with find-unit c
-DPLL-internal c (suc fuel) a | just l with simplfy c l
+DPLL-internal c (suc fuel) a | just l with (simplfy c l)
 ... | some c' = DPLL-internal c' fuel (vars-lit l a)
 ... | sat     = just (vars-lit l a)
 ... | unsat   = nothing
-DPLL-internal c (suc fuel) a | nothing with find-pure c
+DPLL-internal c (suc fuel) a | nothing with (find-pure c)
 ... | just l with simplfy c l
 ...   | some c' = DPLL-internal c' fuel (vars-lit l a)
 ...   | sat     = just (vars-lit l a)

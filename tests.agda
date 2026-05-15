@@ -1,6 +1,6 @@
 module tests where
 
-open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT; Formula; Var; _∨_; _∧_; _=>_; ¬_; NNF; lit; ¬Var; to-nnf)
+open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT; Formula; Var; _∨_; _∧_; _=>_; ¬_; NNF; lit; ¬Var; to-nnf; DPLL; simplfy; sat; unsat; find-unit; find-pure; simply-lit)
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)
 open import Data.Bool using (Bool; true; false)
@@ -205,3 +205,60 @@ sat-unsat-two-vars :
         (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))))
   ≡ nothing
 sat-unsat-two-vars = refl
+
+-- SAT
+
+dpll-simple :
+  isJust (DPLL (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.Var 0))))
+  ≡ true
+dpll-simple = refl
+
+find-unit-test : find-unit ((proj.CNF._∧_
+      (proj.Disjunct.lit (proj.Literal.Var 0))
+      (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 0))))) ≡ just (Var 0)
+find-unit-test = refl
+
+simply-lit-test-tt : simply-lit (Var 0) (Var 0) ≡ sat
+simply-lit-test-tt = refl
+
+simply-lit-test-ft : simply-lit (¬Var 0) (Var 0) ≡ unsat
+simply-lit-test-ft = refl
+
+simply-lit-test-tf : simply-lit (Var 0) (¬Var 0) ≡ unsat
+simply-lit-test-tf = refl
+
+simply-lit-test-ff : simply-lit (¬Var 0) (¬Var 0) ≡ sat
+simply-lit-test-ff = refl
+
+simplfy-test : simplfy ((proj.CNF._∧_
+      (proj.Disjunct.lit (proj.Literal.Var 0))
+      (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 0))))) (Var 0) ≡ unsat
+simplfy-test = refl
+
+-- x_0 /\ !x_0
+dpll-contradiction :
+  DPLL
+    (proj.CNF._∧_
+      (proj.Disjunct.lit (proj.Literal.Var 0))
+      (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 0))))
+  ≡ nothing
+dpll-contradiction = refl
+
+dpll-two-vars :
+  isJust
+    (DPLL
+      (proj.CNF._∧_
+        (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))))
+  ≡ true
+dpll-two-vars = refl
+
+dpll-unsat-two-vars :
+  DPLL
+    (proj.CNF._∧_
+      (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+      (proj.CNF._∧_
+        (proj.Disjunct.lit (proj.Literal.¬Var 0))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))))
+  ≡ nothing
+dpll-unsat-two-vars = refl
