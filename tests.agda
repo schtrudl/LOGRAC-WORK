@@ -1,6 +1,6 @@
 module tests where
 
-open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT; Formula; Var; _∨_; _∧_; _=>_; ¬_; NNF; lit; ¬Var; to-nnf; DPLL; simplfy; sat; unsat; find-unit; find-pure; simply-lit)
+open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT; Formula; Var; _∨_; _∧_; _=>_; ¬_; NNF; lit; ¬Var; to-nnf; DPLL; simplfy; sat; unsat; find-unit; find-pure; simply-lit; some; simplfy-dis)
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)
 open import Data.Bool using (Bool; true; false)
@@ -244,6 +244,21 @@ dpll-contradiction :
   ≡ nothing
 dpll-contradiction = refl
 
+find-unit-x1 : find-unit (proj.CNF._∧_
+        (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))) ≡ just (¬Var 1)
+find-unit-x1 = refl
+
+simplfy-dis-x1 : simplfy-dis (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1))) (¬Var 1) ≡ some (proj.Disjunct.lit (proj.Literal.Var 0))
+simplfy-dis-x1 = refl
+
+simplfy-x1 : simplfy (proj.CNF._∧_
+        (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))) (¬Var 1) ≡ some (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.Var 0)))
+simplfy-x1 = refl
+
+-- (x0 \/ x1) /\ (!x1)
+-- x0 = 1; x1 = 0
 dpll-two-vars :
   isJust
     (DPLL

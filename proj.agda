@@ -344,12 +344,15 @@ simplfy-dis (lit x) l with (simply-lit x l)
 ... | unsat = unsat
 ... | some x = some (lit x)
 simplfy-dis (x ∨ d) l with (simply-lit x l)
+simplfy-dis (x ∨ d) l | sat = sat
+simplfy-dis (x ∨ d) l | unsat with (simplfy-dis d l)
 ... | sat = sat
 ... | unsat = unsat
-... | some x with (simplfy-dis d l)
-...   | sat = sat
-...   | unsat = unsat
-...   | some d = some (x ∨ d)
+... | some d' = some (d')
+simplfy-dis (x ∨ d) l | some x' with (simplfy-dis d l)
+... | sat = sat
+... | unsat = some (lit x')
+... | some d' = some (x' ∨ d')
 
 -- retruns nothing if empty => all done
 simplfy : CNF → Literal → Clause CNF
@@ -364,7 +367,7 @@ simplfy (d ∧ c) l | sat with (simplfy c l)
 ... | unsat = unsat
 ... | some c' = some c'
 simplfy (d ∧ c) l | some d' with (simplfy c l)
-... | sat = sat
+... | sat = some (dis d')
 ... | unsat = unsat
 ... | some c' = some (d' ∧ c')
 
