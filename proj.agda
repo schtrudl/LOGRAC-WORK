@@ -373,26 +373,26 @@ pick-a-lit ((l ∨ _) ∧ _) = l
 
 -- TODO: Maybe Assignment
 
-DPLL-internal : CNF → ℕ → Bool
-DPLL-internal _ zero = false
-DPLL-internal c (suc fuel) with find-unit c
-DPLL-internal c (suc fuel) | just l with simplfy c l
-... | some c' = DPLL-internal c' fuel
-... | sat     = true
-... | unsat   = false
-DPLL-internal c (suc fuel) | nothing with find-pure c
+DPLL-internal : CNF → ℕ → Assignment → Maybe Assignment
+DPLL-internal _ zero _ = nothing
+DPLL-internal c (suc fuel) a with find-unit c
+DPLL-internal c (suc fuel) a | just l with simplfy c l
+... | some c' = DPLL-internal c' fuel a
+... | sat     = just a
+... | unsat   = nothing
+DPLL-internal c (suc fuel) a | nothing with find-pure c
 ... | just l with simplfy c l
-...   | some c' = DPLL-internal c' fuel
-...   | sat     = true
-...   | unsat   = false
-DPLL-internal c (suc fuel) | nothing | nothing with (pick-a-lit c)
+...   | some c' = DPLL-internal c' fuel a
+...   | sat     = just a
+...   | unsat   = nothing
+DPLL-internal c (suc fuel) a | nothing | nothing with (pick-a-lit c)
 ... | l with (simplfy c l)
-...   | some c' = DPLL-internal c' fuel
-...   | sat     = true
+...   | some c' = DPLL-internal c' fuel a
+...   | sat     = just a
 ...   | unsat with (simplfy c (¬ₗ l))
-...     | some c' = DPLL-internal c' fuel
-...     | sat     = true
-...     | unsat   = false
+...     | some c' = DPLL-internal c' fuel a
+...     | sat     = just a
+...     | unsat   = nothing
 
 count-literals-dis : Disjunct → ℕ
 count-literals-dis (lit _) = 1
@@ -402,8 +402,8 @@ count-literals : CNF → ℕ
 count-literals (dis d) = count-literals-dis d
 count-literals (d ∧ c) = (count-literals-dis d) + (count-literals c)
 
-DPLL : CNF → Bool
-DPLL c = DPLL-internal c (suc (count-literals c))
+DPLL : CNF → Maybe Assignment
+DPLL c = DPLL-internal c (suc (count-literals c)) []
 
 {-
 Problem 10 (**/***). Write a function that converts an NNFformula to an equisatisfiable
