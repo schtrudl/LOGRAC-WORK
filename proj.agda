@@ -388,10 +388,14 @@ DPLL c | nothing with find-pure c
 ...   | some c' = DPLL c'
 ...   | sat     = true
 ...   | unsat   = false
-DPLL c | nothing | nothing with simplfy c (pick-a-lit c)
-... | some c' = DPLL c'
-... | sat     = true
-... | unsat   = false
+DPLL c | nothing | nothing with (pick-a-lit c)
+... | l with (simplfy c l)
+...   | some c' = DPLL c'
+...   | sat     = true
+...   | unsat with (simplfy c (¬ₗ l))
+...     | some c' = DPLL c'
+...     | sat     = true
+...     | unsat   = false
 -}
 
 {-
