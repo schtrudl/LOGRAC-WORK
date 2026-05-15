@@ -8,6 +8,10 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Data.Maybe using (Maybe; nothing; just)
 open import Data.Product using (_×_; _,_)
 
+isJust : {A : Set} → Maybe A → Bool
+isJust nothing = false
+isJust (just _) = true
+
 σ : Assignment
 σ = 
   (0 , true) ∷
@@ -162,8 +166,8 @@ test-nnf-correctness = refl
 -- SAT
 
 sat-simple :
-  SAT (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.Var 0)))
-  ≡ just true
+  isJust (SAT (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.Var 0))))
+  ≡ true
 sat-simple = refl
 
 sat-contradiction :
@@ -171,15 +175,16 @@ sat-contradiction :
     (proj.CNF._∧_
       (proj.Disjunct.lit (proj.Literal.Var 0))
       (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 0))))
-  ≡ just false
+  ≡ nothing
 sat-contradiction = refl
 
 sat-two-vars :
-  SAT
-    (proj.CNF._∧_
-      (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
-      (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1))))
-  ≡ just true
+  isJust
+    (SAT
+      (proj.CNF._∧_
+        (proj.Disjunct._∨_ (proj.Literal.Var 0) (proj.Disjunct.lit (proj.Literal.Var 1)))
+        (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))))
+  ≡ true
 sat-two-vars = refl
 
 sat-unsat-two-vars :
@@ -189,5 +194,5 @@ sat-unsat-two-vars :
       (proj.CNF._∧_
         (proj.Disjunct.lit (proj.Literal.¬Var 0))
         (proj.CNF.dis (proj.Disjunct.lit (proj.Literal.¬Var 1)))))
-  ≡ just false
+  ≡ nothing
 sat-unsat-two-vars = refl
