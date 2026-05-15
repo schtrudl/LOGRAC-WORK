@@ -1,6 +1,6 @@
 module tests where
 
-open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT)
+open import proj using (Assignment; eval; eval-nnf; eval-cnf; SAT; Formula; Var; _∨_; _∧_; _=>_; ¬_; NNF; lit; ¬Var; to-nnf)
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)
 open import Data.Bool using (Bool; true; false)
@@ -11,6 +11,15 @@ open import Data.Product using (_×_; _,_)
 isJust : {A : Set} → Maybe A → Bool
 isJust nothing = false
 isJust (just _) = true
+
+phi : Formula
+phi = (((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))
+
+expected-nnf : NNF
+expected-nnf = ((((lit (¬Var 1)) ∧ (lit (¬Var 2))) ∨ (lit (¬Var 3)))) ∨ (lit (¬Var 4))
+
+test-nnf : to-nnf phi ≡ expected-nnf
+test-nnf = refl
 
 σ : Assignment
 σ = 

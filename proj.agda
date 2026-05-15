@@ -71,16 +71,6 @@ to-nnf (¬ (a ∨ b)) = (to-nnf (¬ a)) ∧ (to-nnf (¬ b))
 to-nnf (a ∧ b) = (to-nnf a) ∧ (to-nnf b)
 to-nnf (a ∨ b) = (to-nnf a) ∨ (to-nnf b)
 
--- test case
-phi : Formula
-phi = (((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))
-
-expected-nnf : NNF
-expected-nnf = ((((lit (¬Var 1)) ∧ (lit (¬Var 2))) ∨ (lit (¬Var 3)))) ∨ (lit (¬Var 4))
-
-test-nnf : to-nnf phi ≡ expected-nnf
-test-nnf = refl
-
 {-
 Problem 4 (**). Copy the Assoc module from week 9 exercises and complete it to a fully
 working implementation of an associative structure you want (associative list, dictionary, etc.).
