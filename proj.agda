@@ -191,7 +191,8 @@ Literal → Var 𝑛
 | ¬Var 𝑛
 Disjunct → Literal
 | Literal ∨ Disjunct
-CNF → Disjunct ∨ CNF
+CNF → Disjunct
+| Disjunct ∧ CNF
 -}
 
 -- literal defined in 2.
@@ -200,8 +201,8 @@ data Disjunct : Set where
     _∨_ : Literal → Disjunct → Disjunct
 
 data CNF : Set where
-    dis : Disjunct → CNF -- XXX: errata on table
-    _∧_ : Disjunct → CNF → CNF -- XXX: errata on table
+    dis : Disjunct → CNF
+    _∧_ : Disjunct → CNF → CNF
 
 {-
 Problem 8 (*). Define an evaluation function eval-cnf ∶ Assignment → CNF → Maybe Bool
@@ -377,8 +378,6 @@ pick-a-lit (dis (l ∨ _)) = l
 pick-a-lit (lit l ∧ c) = l
 pick-a-lit ((l ∨ _) ∧ _) = l
 
--- TODO: Maybe Assignment
-
 DPLL-internal : CNF → ℕ → Assignment → Maybe Assignment
 DPLL-internal _ zero _ = nothing
 DPLL-internal c (suc fuel) a with find-unit c
@@ -412,7 +411,14 @@ DPLL : CNF → Maybe Assignment
 DPLL c = DPLL-internal c (suc (count-literals c)) []
 
 {-
-Problem 10 (**/***). Write a function that converts an NNFformula to an equisatisfiable
+Problem 10 (**). Show that the SAT solver you implemented is indeed correct, if that is not
+obvious from the output type of the SAT solver.
+-}
+
+-- XXX: are tests enough?
+
+{-
+Problem 11 (**/***). Write a function that converts an NNFformula to an equisatisfiable
 CNFformula.
 Note: a more complex implementation (e. g. Tseytin transformation) will be graded higher.
 -}
@@ -454,3 +460,43 @@ tseytin-transformation f =
     in (lit l) ∧ f -- we need to append root literal
 
 -- TODO: test this
+
+{-
+Problem 12 (*). To tie the bow on the whole thing, use the above to construct a SAT solver
+for any formula.
+-}
+
+-- this is to populate all vars in assigment for var
+{-
+populate-lit : Literal → Assignment → Assignment
+populate-lit (Var x) a with a ‼ x
+... | nothing = a [ x ]≔ false
+... | just _ = a
+populate-lit (¬Var x) a with a ‼ x
+... | nothing = a [ x ]≔ false
+... | just _ = a
+
+populate-dis : Disjunct → Assignment → Assignment
+populate-dis (lit l) a = populate-lit l a
+populate-dis (l ∨ d) a = populate-dis d (populate-lit l a)
+
+populate : CNF → Assignment → Assignment
+populate (dis d) a = populate-dis d a
+populate (d ∧ c) a = populate c (populate-dis d a)
+-}
+
+populate : Formula → Assignment → Assignment
+populate (Var x) a with a ‼ x
+... | nothing = a [ x ]≔ false
+... | just _ = a
+populate (Formula.¬ f) a = populate f a
+populate (f1 ∧ f2) a = populate f1 (populate f2 a)
+populate (f1 ∨ f2) a = populate f1 (populate f2 a)
+
+whole-DPLL : Formula → Maybe Assignment
+whole-DPLL f with (DPLL (tseytin-transformation (to-nnf f)))
+... | nothing = nothing
+... | just a = just (populate f a)
+
+whole-sat : Formula → Maybe Assignment
+whole-sat f = SAT (tseytin-transformation (to-nnf f))
