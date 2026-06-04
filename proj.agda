@@ -465,28 +465,42 @@ largest-var (lit (¬Var x)) = x
 largest-var (a ∧ b) = (largest-var a) ⊔ (largest-var b)
 largest-var (a ∨ b) = (largest-var a) ⊔ (largest-var b)
 
+-- sprehodimo se po disjunkciah in jih appendamo
+-- kor @ppend dveh seznamov
+append-cnf : CNF → CNF → CNF
+append-cnf (dis d) c2 = d ∧ c2
+append-cnf (d ∧ c1) c2 = d ∧ (append-cnf c1 c2)
+
 -- tseytin-transformation-internal
 -- n is first var available
 -- returns (new first available var, builded CNF, this literal)
 tti : ℕ → NNF → ℕ × CNF × Literal
-tti n (lit x) = (n , dis (lit x) , x) -- ideally we would return empty CNF here
+tti n (lit x) = (n , dis (x ∨ (lit (¬ₗ x))) , x) -- ideally we would return empty CNF here, but tautology will do
 tti n (a ∧ b) =
     let
         la∧b = Literal.Var n
         n1 , aa , la = tti (suc n) a
         n2 , bb , lb = tti n1 b
-    -- la∧b <=> la ∧ lb
-    -- /\ ¬la∧b ∨ la /\ ¬la∧b ∨ lb /\ la∧b ∨ ¬la ∨ ¬la
-    -- po zvesku drgač pa je tudi kle: https://en.wikipedia.org/wiki/Tseytin_transformation#Gate_sub-expressions
-    in (n2 , (( (¬ₗ la∧b) ∨ (lit la)) ∧ (((¬ₗ la∧b) ∨ (lit lb)) ∧ (dis ((¬ₗ la) ∨ ((¬ₗ lb) ∨ (lit la∧b)))))) , la∧b)
+        -- la∧b <=> la ∧ lb
+        -- /\ ¬la∧b ∨ la /\ ¬la∧b ∨ lb /\ la∧b ∨ ¬la ∨ ¬la
+        -- po zvesku drgač pa je tudi kle: https://en.wikipedia.org/wiki/Tseytin_transformation#Gate_sub-expressions
+        on_this_layer = ((¬ₗ la∧b) ∨ (lit la))
+             ∧ (((¬ₗ la∧b) ∨ (lit lb))
+             ∧ (dis ((¬ₗ la) ∨ ((¬ₗ lb) ∨ (lit la∧b))))
+               ) -- tehnično gledano bi sem lahko vtaknl še aa ampak pri bb se zatakne in to je bolj pregledno:
+    in (n2 , append-cnf aa (append-cnf bb on_this_layer) , la∧b)
 tti n (a ∨ b) =
     let
         la∨b = Literal.Var n
         n1 , aa , la = tti (suc n) a
         n2 , bb , lb = tti n1 b
-    -- la∨b <=> la ∨ lb
-    -- /\ la∨b ∨ ¬la /\ la∨b ∨ ¬lb /\ ¬la∨b ∨ la ∨ lb
-    in ( n2 , ( la∨b ∨ (lit (¬ₗ la))) ∧ ( ( la∨b ∨ (lit (¬ₗ lb))) ∧ ( dis ((¬ₗ la∨b) ∨ (la ∨ (lit (lb))) ))  ), la∨b )
+        -- la∨b <=> la ∨ lb
+        -- /\ la∨b ∨ ¬la /\ la∨b ∨ ¬lb /\ ¬la∨b ∨ la ∨ lb
+        on_this_layer = (la∨b ∨ (lit (¬ₗ la)))
+             ∧ ((la∨b ∨ (lit (¬ₗ lb)))
+             ∧ (dis ((¬ₗ la∨b) ∨ (la ∨ (lit lb))))
+               )
+    in (n2 , append-cnf aa (append-cnf bb on_this_layer) , la∨b)
 
 tseytin-transformation : NNF → CNF
 tseytin-transformation f =

@@ -6,6 +6,11 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Data.Maybe using (Maybe; nothing; just)
 
 sat-simple :
-  maybe-eval-sat ((((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))) whole-DPLL
+  maybe-eval-sat ((((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))) whole-sat
   ≡ just true
 sat-simple = refl
+
+sat-DPLL :
+  maybe-eval-sat ((((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))) whole-DPLL
+  ≡ just true
+sat-DPLL = refl
