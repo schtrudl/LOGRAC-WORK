@@ -164,10 +164,8 @@ eval σ (x ∧ y) with eval σ x | eval σ y
 ... | _      | _      = nothing
 
 eval σ (x ∨ y) with eval σ x | eval σ y
-... | just true | _         = just true
-... | _         | just true = just true
-... | just x    | just y    = just (x Data.Bool.∨ y)
-... | _         | _         = nothing
+... | just x | just y = just (x Data.Bool.∨ y)
+... | _      | _      = nothing
 
 {-
 Problem 6 (*). Define an evaluation function eval-nnf ∶ Assignment → NNF → Maybe Bool
@@ -183,10 +181,8 @@ eval-nnf σ (x ∧ y) with eval-nnf σ x | eval-nnf σ y
 ... | _      | _      = nothing
 
 eval-nnf σ (x ∨ y) with eval-nnf σ x | eval-nnf σ y
-... | just true | _         = just true
-... | _         | just true = just true
-... | just x    | just y    = just (x Data.Bool.∨ y)
-... | _         | _         = nothing
+... | just x | just y = just (x Data.Bool.∨ y)
+... | _      | _      = nothing
 
 {-
 Problem 7 (*). Define a type of conjunction normal form formulas called CNF, with the following
@@ -218,10 +214,8 @@ assigning to each assignment of variables and conjunction normal from formula it
 eval-disj : Assignment → Disjunct → Maybe Bool
 eval-disj σ (lit l) = eval-lit σ l
 eval-disj σ (x ∨ xs) with eval-lit σ x | eval-disj σ xs
-... | just true | _         = just true
-... | _         | just true = just true
-... | just a    | just b    = just (a Data.Bool.∨ b)
-... | _         | _         = nothing
+... | just a | just b = just (a Data.Bool.∨ b)
+... | _      | _      = nothing
 
 eval-cnf : Assignment → CNF → Maybe Bool
 eval-cnf σ (dis d) = eval-disj σ d
