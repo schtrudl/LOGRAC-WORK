@@ -407,6 +407,25 @@ count-literals : CNF → ℕ
 count-literals (dis d) = count-literals-dis d
 count-literals (d ∧ c) = (count-literals-dis d) + (count-literals c)
 
+{-
+populate-lit : Literal → Assignment → Assignment
+populate-lit (Var x) a with a ‼ x
+... | nothing = a [ x ]≔ false
+... | just _ = a
+populate-lit (¬Var x) a with a ‼ x
+... | nothing = a [ x ]≔ false
+... | just _ = a
+
+populate-dis : Disjunct → Assignment → Assignment
+populate-dis (lit l) a = populate-lit l a
+populate-dis (l ∨ d) a = populate-dis d (populate-lit l a)
+
+-- populate assignment with all vars from CNF
+populate : CNF → Assignment → Assignment
+populate (dis d) a = populate-dis d a
+populate (d ∧ c) a = populate c (populate-dis d a)
+-}
+-- we could do populate here, but it's more clean to do it down bellow (see whole-sat)
 DPLL : CNF → Maybe Assignment
 DPLL c = DPLL-internal c (suc (count-literals c)) []
 
@@ -415,7 +434,22 @@ Problem 10 (**). Show that the SAT solver you implemented is indeed correct, if 
 obvious from the output type of the SAT solver.
 -}
 
--- XXX: are tests enough?
+{-
+The idea for DPLL was that we would inductively do the proof by proving that simplifications make equsatisfiable problems
+but then the problem was with doing this as even if we used "smart" eval:
+eval-disj : Assignment → Disjunct → Maybe Bool
+eval-disj σ (lit l) = eval-lit σ l
+eval-disj σ (x ∨ xs) with eval-lit σ x | eval-disj σ xs
+... | just true | _         = just true
+... | _         | just true = just true
+... | just a    | just b    = just (a Data.Bool.∨ b)
+... | _         | _         = nothing
+
+we would just get nothing which is useless.
+
+So I do not see how we can prove it inductively and nicely
+at least not without spending way too much time (I heard one got proof from AI with 1k lines).
+-}
 
 {-
 Problem 11 (**/***). Write a function that converts an NNFformula to an equisatisfiable
@@ -459,31 +493,12 @@ tseytin-transformation f =
     let _ , f , l = tti (suc(largest-var f)) f
     in (lit l) ∧ f -- we need to append root literal
 
--- TODO: test this
-
 {-
 Problem 12 (*). To tie the bow on the whole thing, use the above to construct a SAT solver
 for any formula.
 -}
 
 -- this is to populate all vars in assigment for var
-{-
-populate-lit : Literal → Assignment → Assignment
-populate-lit (Var x) a with a ‼ x
-... | nothing = a [ x ]≔ false
-... | just _ = a
-populate-lit (¬Var x) a with a ‼ x
-... | nothing = a [ x ]≔ false
-... | just _ = a
-
-populate-dis : Disjunct → Assignment → Assignment
-populate-dis (lit l) a = populate-lit l a
-populate-dis (l ∨ d) a = populate-dis d (populate-lit l a)
-
-populate : CNF → Assignment → Assignment
-populate (dis d) a = populate-dis d a
-populate (d ∧ c) a = populate c (populate-dis d a)
--}
 
 populate : Formula → Assignment → Assignment
 populate (Var x) a with a ‼ x
