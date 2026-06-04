@@ -515,3 +515,13 @@ whole-DPLL f with (DPLL (tseytin-transformation (to-nnf f)))
 
 whole-sat : Formula → Maybe Assignment
 whole-sat f = SAT (tseytin-transformation (to-nnf f))
+
+-- nothing -> UNSAT
+-- just true -> SAT
+-- just false -> ERR (solver returns unsatisifable assignment)
+maybe-eval-assignment : Formula → Maybe Assignment → Maybe Bool
+maybe-eval-assignment f (just a) = eval a f
+maybe-eval-assignment f nothing = nothing
+
+maybe-eval-sat : Formula → (Formula → Maybe Assignment) → Maybe Bool
+maybe-eval-sat f solver = maybe-eval-assignment f (solver f)
