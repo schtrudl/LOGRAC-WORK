@@ -534,6 +534,10 @@ whole-DPLL f with (DPLL (tseytin-transformation (to-nnf f)))
 whole-sat : Formula → Maybe Assignment
 whole-sat f = SAT (tseytin-transformation (to-nnf f))
 
+{-
+Here are some more stuff for testing
+-}
+
 -- nothing -> UNSAT
 -- just true -> SAT
 -- just false -> ERR (solver returns unsatisifable assignment)
