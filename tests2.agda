@@ -14,3 +14,13 @@ sat-DPLL :
   maybe-eval-sat ((((Var 1) ∨ (Var 2)) ∧ (Var 3)) => (¬ (Var 4))) whole-DPLL
   ≡ just true
 sat-DPLL = refl
+
+random-167-dpll :
+  maybe-eval-sat (¬ (((Var 1) => (Var 1)) ∧ (Var 1))) whole-DPLL
+  ≡ just true
+random-167-dpll = refl
+
+random-167-wsat :
+  maybe-eval-sat (¬ (((Var 1) => (Var 1)) ∧ (Var 1))) whole-sat
+  ≡ just true
+random-167-wsat = refl

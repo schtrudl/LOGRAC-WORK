@@ -378,7 +378,15 @@ pick-a-lit (dis (l ∨ _)) = l
 pick-a-lit (lit l ∧ c) = l
 pick-a-lit ((l ∨ _) ∧ _) = l
 
+-- forward declaration (kokr v C za mut rec)
+try-assign-lit : Literal → CNF → ℕ → Assignment → Maybe Assignment
 DPLL-internal : CNF → ℕ → Assignment → Maybe Assignment
+
+try-assign-lit l c fuel a with simplfy c l
+... | some c' = DPLL-internal c' fuel (vars-lit l a)
+... | sat     = just (vars-lit l a)
+... | unsat   = nothing
+
 DPLL-internal _ zero _ = nothing
 DPLL-internal c (suc fuel) a with find-unit c
 DPLL-internal c (suc fuel) a | just l with (simplfy c l)
@@ -391,13 +399,9 @@ DPLL-internal c (suc fuel) a | nothing with (find-pure c)
 ...   | sat     = just (vars-lit l a)
 ...   | unsat   = nothing
 DPLL-internal c (suc fuel) a | nothing | nothing with (pick-a-lit c)
-... | l with (simplfy c l)
-...   | some c' = DPLL-internal c' fuel (vars-lit l a)
-...   | sat     = just (vars-lit l a)
-...   | unsat with (simplfy c (¬ₗ l))
-...     | some c' = DPLL-internal c' fuel (vars-lit (¬ₗ l) a)
-...     | sat     = just (vars-lit (¬ₗ l) a)
-...     | unsat   = nothing
+... | l with try-assign-lit l c fuel a
+...   | just a' = just a'
+...   | nothing = try-assign-lit (¬ₗ l) c fuel a
 
 count-literals-dis : Disjunct → ℕ
 count-literals-dis (lit _) = 1
